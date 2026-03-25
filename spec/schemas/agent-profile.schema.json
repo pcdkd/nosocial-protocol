@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nosocial.me/schemas/agent-profile/0.1.0/schema.json",
+  "title": "NoSocial Agent Profile",
+  "description": "Reputation, history, and behavioral metadata for autonomous agents. Extends A2A Agent Cards.",
+  "type": "object",
+  "required": ["nosocial", "identity"],
+  "properties": {
+    "nosocial": {
+      "type": "string",
+      "const": "0.1.0",
+      "description": "Spec version"
+    },
+    "identity": { "$ref": "#/$defs/Identity" },
+    "reputation": { "$ref": "#/$defs/Reputation" },
+    "history": { "$ref": "#/$defs/History" },
+    "evolution": { "$ref": "#/$defs/Evolution" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "Identity": {
+      "type": "object",
+      "required": ["publicKey", "did", "signingAlgorithm", "registeredAt"],
+      "properties": {
+        "publicKey": {
+          "type": "string",
+          "pattern": "^ed25519:[A-Za-z0-9_-]+$",
+          "description": "Ed25519 public key in {algorithm}:{base64url} format"
+        },
+        "did": {
+          "type": "string",
+          "pattern": "^did:nosocial:[a-f0-9]{64}$",
+          "description": "Deterministic DID derived from SHA-256 of public key bytes"
+        },
+        "signingAlgorithm": {
+          "type": "string",
+          "const": "Ed25519"
+        },
+        "registeredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endpoint": {
+          "type": "string",
+          "format": "uri"
+        },
+        "operator": { "$ref": "#/$defs/Operator" }
+      },
+      "additionalProperties": false
+    },
+    "Operator": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "contact": { "type": "string", "format": "email" },
+        "homepage": { "type": "string", "format": "uri" }
+      },
+      "additionalProperties": false
+    },
+    "Reputation": {
+      "type": "object",
+      "required": ["overall", "domains", "oracleEndpoint", "signature"],
+      "properties": {
+        "overall": { "$ref": "#/$defs/OverallScore" },
+        "domains": { "$ref": "#/$defs/DomainScores" },
+        "oracleEndpoint": {
+          "type": "string",
+          "format": "uri"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^ed25519:[A-Za-z0-9_-]+$",
+          "description": "Oracle's signature over the reputation object (excluding this field)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "OverallScore": {
+      "type": "object",
+      "required": ["score", "confidence", "totalInteractions", "updatedAt"],
+      "properties": {
+        "score": {
+          "type": "number",
+          "minimum": -1.0,
+          "maximum": 1.0
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "totalInteractions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
+    },
+    "DomainScores": {
+      "type": "object",
+      "properties": {
+        "task_completion": { "$ref": "#/$defs/DomainScore" },
+        "reliability": { "$ref": "#/$defs/DomainScore" },
+        "information_quality": { "$ref": "#/$defs/DomainScore" },
+        "collaboration": { "$ref": "#/$defs/DomainScore" },
+        "communication": { "$ref": "#/$defs/DomainScore" }
+      },
+      "additionalProperties": false
+    },
+    "DomainScore": {
+      "type": "object",
+      "required": ["score", "confidence", "interactionCount", "trend"],
+      "properties": {
+        "score": {
+          "type": "number",
+          "minimum": -1.0,
+          "maximum": 1.0
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "interactionCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of interaction reports. Oracle policy: scores SHOULD NOT be published below 3."
+        },
+        "trend": {
+          "type": "number",
+          "minimum": -1.0,
+          "maximum": 1.0,
+          "description": "Difference between current score and score computed 30 days ago. Positive = improving."
+        }
+      },
+      "additionalProperties": false
+    },
+    "History": {
+      "type": "object",
+      "required": ["activeSince", "totalCollaborations", "uniqueCollaborators"],
+      "properties": {
+        "activeSince": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "totalCollaborations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "uniqueCollaborators": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "topCapabilitiesUsed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["skill", "count"],
+            "properties": {
+              "skill": { "type": "string" },
+              "count": { "type": "integer", "minimum": 0 }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 10
+        },
+        "averageResponseTime": {
+          "type": "string",
+          "description": "ISO 8601 duration"
+        },
+        "completionRate": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "lastActiveAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Evolution": {
+      "type": "object",
+      "properties": {
+        "capabilityTimeline": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CapabilityEvent" }
+        },
+        "performanceSnapshots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/PerformanceSnapshot" }
+        },
+        "version": { "type": "string" },
+        "previousVersions": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "CapabilityEvent": {
+      "type": "object",
+      "required": ["date", "event", "skill"],
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "event": {
+          "type": "string",
+          "enum": ["capability_added", "capability_removed", "capability_updated", "performance_change"]
+        },
+        "skill": { "type": "string" },
+        "details": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "PerformanceSnapshot": {
+      "type": "object",
+      "required": ["date", "overallScore"],
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "overallScore": {
+          "type": "number",
+          "minimum": -1.0,
+          "maximum": 1.0
+        },
+        "taskCompletionScore": {
+          "type": "number",
+          "minimum": -1.0,
+          "maximum": 1.0
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

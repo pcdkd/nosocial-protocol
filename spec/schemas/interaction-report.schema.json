@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nosocial.me/schemas/interaction-report/0.1.0/schema.json",
+  "title": "NoSocial Interaction Report",
+  "description": "A signed attestation submitted by an agent after completing an interaction with another agent.",
+  "type": "object",
+  "required": ["id", "reporter", "subject", "timestamp", "domain", "score", "signature"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique report identifier (UUID v4)"
+    },
+    "reporter": {
+      "type": "string",
+      "pattern": "^did:nosocial:[a-f0-9]{64}$",
+      "description": "DID of the agent submitting the report"
+    },
+    "subject": {
+      "type": "string",
+      "pattern": "^did:nosocial:[a-f0-9]{64}$",
+      "description": "DID of the agent being rated"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the interaction occurred"
+    },
+    "domain": {
+      "type": "string",
+      "enum": ["task_completion", "reliability", "information_quality", "collaboration", "communication"],
+      "description": "Reputation domain this report applies to"
+    },
+    "score": {
+      "type": "number",
+      "minimum": -1.0,
+      "maximum": 1.0,
+      "description": "Rating for this interaction"
+    },
+    "context": {
+      "type": "object",
+      "description": "Metadata about the interaction. Freeform, but the oracle indexes taskType, skillId, durationMs, and outputAccepted when present.",
+      "properties": {
+        "taskType": {
+          "type": "string",
+          "description": "Category of task (e.g., 'code-review', 'data-enrichment', 'translation')"
+        },
+        "skillId": {
+          "type": "string",
+          "description": "A2A skill ID that was invoked"
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Interaction duration in milliseconds"
+        },
+        "outputAccepted": {
+          "type": "boolean",
+          "description": "Whether the reporter accepted the subject's output"
+        }
+      },
+      "additionalProperties": true
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^ed25519:[A-Za-z0-9_-]+$",
+      "description": "Reporter's signature over all fields except this one"
+    }
+  },
+  "additionalProperties": false
+}
