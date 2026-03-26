@@ -30,7 +30,7 @@ class NoSocialReporter:
 
     def __init__(
         self,
-        oracle_url: str = "http://localhost:3000",
+        oracle_url: str = "https://api.nosocial.me",
         keys_dir: str = ".nosocial/keys",
         crew_name: str = "default-crew",
         auto_register: bool = True,
