@@ -138,3 +138,16 @@ class TestReporterCallback:
             id1 = reporter._get_or_create_identity("researcher")
             id2 = reporter._get_or_create_identity("researcher")
             assert id1.did == id2.did
+
+    def test_agent_names_namespaced_by_crew(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            r1 = NoSocialReporter(
+                keys_dir=tmpdir, crew_name="crew-a", auto_register=False
+            )
+            r2 = NoSocialReporter(
+                keys_dir=tmpdir, crew_name="crew-b", auto_register=False
+            )
+            # Same role name, different crews → different identities
+            id1 = r1._get_or_create_identity("crew-a:researcher")
+            id2 = r2._get_or_create_identity("crew-b:researcher")
+            assert id1.did != id2.did

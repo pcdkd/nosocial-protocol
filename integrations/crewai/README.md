@@ -62,6 +62,15 @@ reporter = NoSocialReporter(
 
 Each agent gets a persistent Ed25519 keypair stored as a PEM file. The agent's NoSocial DID is derived from its public key: `did:nosocial:{sha256(publicKey)}`. Keys persist across runs — the same agent always has the same DID.
 
+Agent names are namespaced by crew: `my-crew:researcher` and `your-crew:researcher` get different identities.
+
+**Important:** The `.nosocial/keys/` directory contains unencrypted private keys. Add it to your `.gitignore`:
+
+```
+# .gitignore
+.nosocial/
+```
+
 ## License
 
 MIT

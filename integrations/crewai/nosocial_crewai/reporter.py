@@ -12,6 +12,7 @@ Usage:
     )
 """
 
+import hashlib
 import logging
 import time
 import uuid
@@ -146,10 +147,13 @@ class NoSocialReporter:
         - Score: 1.0 for successful completion (output exists), -0.5 for empty
         - Context: task description, agent role, output length
         """
-        agent_name = self._extract_agent_name(output)
-        if not agent_name:
+        agent_role = self._extract_agent_name(output)
+        if not agent_role:
             return
 
+        # Namespace agent identity by crew to avoid collisions
+        # (e.g., "my-crew:researcher" vs "your-crew:researcher")
+        agent_name = f"{self.crew_name}:{agent_role}"
         subject = self._get_or_create_identity(agent_name)
 
         # Ensure both parties are registered
@@ -200,7 +204,8 @@ class NoSocialReporter:
         return getattr(agent, "role", None) or getattr(agent, "name", None)
 
     def _extract_task_id(self, output) -> str:
-        """Extract a task identifier from TaskOutput."""
+        """Extract a stable task identifier from TaskOutput via content hash."""
         desc = getattr(output, "description", "") or ""
-        # Use first 50 chars of description as a rough task ID
-        return desc[:50].strip().replace(" ", "-").lower() if desc else "unknown-task"
+        if not desc:
+            return "unknown-task"
+        return hashlib.sha256(desc.encode()).hexdigest()[:12]
