@@ -1,17 +1,17 @@
 FROM node:22-slim AS builder
 
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY oracle/package.json oracle/package-lock.json ./
 RUN npm ci
-COPY tsconfig.json ./
-COPY src/ src/
+COPY oracle/tsconfig.json ./
+COPY oracle/src/ src/
 RUN npx tsc
 
 FROM node:22-slim
 
 # better-sqlite3 needs the native binary from node_modules
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY oracle/package.json oracle/package-lock.json ./
 RUN npm ci --omit=dev
 COPY --from=builder /app/dist/ dist/
 
