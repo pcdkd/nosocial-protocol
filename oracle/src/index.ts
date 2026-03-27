@@ -1,3 +1,15 @@
+import * as Sentry from "@sentry/node";
+
+// Init Sentry before anything else
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.RAILWAY_ENVIRONMENT_NAME || "development",
+    release: "oracle@0.1.0",
+    tracesSampleRate: 1.0,
+  });
+}
+
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -21,11 +33,11 @@ app.get("/", (c) =>
 );
 
 app.get("/health", (c) => {
-  // Verify DB is accessible
   try {
     getDb().prepare("SELECT 1").get();
     return c.json({ status: "ok" });
-  } catch {
+  } catch (e) {
+    Sentry.captureException(e);
     return c.json({ status: "error" }, 500);
   }
 });
@@ -33,6 +45,13 @@ app.get("/health", (c) => {
 // API routes
 app.route("/v1/agents", agentRoutes);
 app.route("/v1/reports", reportRoutes);
+
+// Global error handler — catches unhandled errors in routes
+app.onError((err, c) => {
+  Sentry.captureException(err);
+  console.error("Unhandled error:", err);
+  return c.json({ error: "Internal server error" }, 500);
+});
 
 const port = parseInt(process.env.PORT || "3000");
 
