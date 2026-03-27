@@ -9,11 +9,30 @@ description = "NoSocial reputation reporting for CrewAI — auto-reports agent i
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
+authors = [
+    { name = "NoSocial", email = "hello@nosocial.me" },
+]
+keywords = ["nosocial", "crewai", "agent", "reputation", "a2a"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+]
 dependencies = [
     "crewai>=0.80.0",
     "requests>=2.31.0",
     "cryptography>=42.0.0",
 ]
+
+[project.urls]
+Homepage = "https://nosocial.me"
+Repository = "https://github.com/pcdkd/nosocial-protocol"
+Specification = "https://nosocial.me/extensions/agent-profile"
 
 [project.optional-dependencies]
 dev = [

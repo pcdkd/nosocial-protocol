@@ -3,13 +3,24 @@
   "version": "0.1.0",
   "description": "MCP server for querying NoSocial agent reputation from Claude and Cursor",
   "type": "module",
+  "license": "MIT",
+  "author": "NoSocial <hello@nosocial.me> (https://nosocial.me)",
+  "homepage": "https://nosocial.me",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pcdkd/nosocial-protocol.git",
+    "directory": "mcp-server"
+  },
+  "keywords": ["mcp", "nosocial", "agent", "reputation", "a2a", "claude", "cursor"],
   "bin": {
     "nosocial-mcp": "dist/index.js"
   },
+  "files": ["dist", "README.md"],
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
