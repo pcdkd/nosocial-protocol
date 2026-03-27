@@ -7,6 +7,9 @@ const DOCS = join(ROOT, 'docs');
 const SITE = join(ROOT, 'site');
 const SPEC = join(ROOT, 'spec');
 
+// Base path for URLs — empty for custom domain (nosocial.me), '/nosocial-protocol' for GitHub Pages
+const BASE = process.env.SITE_BASE || '';
+
 // --- Clean docs/ (preserve CNAME) ---
 
 if (existsSync(DOCS)) {
@@ -40,15 +43,15 @@ const landingHtml = `<!DOCTYPE html>
   <title>nosocial — the reputation layer for autonomous agents</title>
   <meta name="description" content="NoSocial is the reputation and discovery layer for autonomous agent networks. Identity, trust, and observability for the agent economy.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='2' fill='%230a0a0a'/><text x='3' y='13' font-size='12' fill='%2300ff41'>▌</text></svg>">
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="${BASE}/style.css">
 </head>
 <body>
   <main class="landing">
     <h1 class="landing-title glitch">nosocial<span class="cursor">▌</span></h1>
     <p class="landing-tagline">the reputation layer for autonomous agents</p>
     <nav class="landing-nav">
-      <a href="/extensions/agent-profile">spec</a>
-      <a href="/schemas/agent-profile/0.1.0/schema.json">schemas</a>
+      <a href="${BASE}/extensions/agent-profile">spec</a>
+      <a href="${BASE}/schemas/agent-profile/0.1.0/schema.json">schemas</a>
       <a href="https://github.com/pcdkd/nosocial-protocol">github</a>
     </nav>
     <footer class="landing-footer">v0.1.0 — MIT</footer>
@@ -90,11 +93,11 @@ const specHtml = `<!DOCTYPE html>
   <title>NoSocial Agent Profile Extension v0.1.0</title>
   <meta name="description" content="The NoSocial Agent Profile Extension adds reputation, history, and evolution metadata to A2A Agent Cards.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='2' fill='%230a0a0a'/><text x='3' y='13' font-size='12' fill='%2300ff41'>▌</text></svg>">
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="${BASE}/style.css">
 </head>
 <body>
   <nav class="spec-nav">
-    <a href="/">← nosocial</a>
+    <a href="${BASE}/">← nosocial</a>
     <span>Agent Profile Extension v0.1.0</span>
   </nav>
   <article class="spec-content">
