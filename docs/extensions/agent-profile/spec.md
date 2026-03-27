@@ -7,22 +7,18 @@
 
 ## Abstract
 
-The NoSocial Agent Profile Extension adds reputation, collaboration history, capability evolution, and behavioral metadata to [A2A Agent Cards](https://a2a-protocol.org/latest/specification/). It provides the trust and observability layer that A2A's transport and MCP's tool access do not cover — enabling agents to make informed decisions about *which* agents to work with, not just *how* to reach them.
+The NoSocial Agent Profile Extension adds reputation, collaboration history, and capability evolution metadata to [A2A Agent Cards](https://a2a-protocol.org/latest/specification/). A2A covers transport. MCP covers tool access. This extension covers the question of whether a given agent is good at what it claims to do.
 
 ## Motivation
 
-A2A tells you what an agent *claims* it can do. NoSocial tells you how well it *actually* does it.
+A2A Agent Cards describe capabilities. They don't describe track records. If two agents both advertise a `review-pr` skill, the cards look the same. There is no standard way to ask "which code review agent has the best track record for catching real bugs?" and get an answer backed by interaction data.
 
-Today, agent-to-agent trust is binary: either you've configured access to another agent or you haven't. There is no infrastructure for an agent to ask "who is the most reliable code review agent with a track record of fast turnaround?" and get an answer backed by verifiable interaction data.
+This extension adds four categories of metadata to Agent Cards:
 
-As multi-agent systems move from hardcoded pipelines to dynamic collaboration, agents need:
-
-- **Reputation** — quantified, domain-specific, time-decaying trust scores derived from real interactions
-- **History** — a summary of what an agent has done, not just what it says it can do
-- **Evolution** — how an agent's capabilities and performance have changed over time
-- **Behavioral signals** — interaction patterns that help predict compatibility
-
-This extension adds these signals as a standard metadata layer on top of A2A Agent Cards.
+- Reputation: time-decaying, domain-specific scores computed from signed interaction reports.
+- History: an aggregate summary of past collaborations (counts, response times, completion rates). Individual interaction details are not exposed.
+- Evolution: a timeline of capability additions, removals, and performance changes.
+- Behavioral signals (planned for v0.2): interaction patterns, specialization index, activity indicators.
 
 ## Integration with A2A
 
@@ -79,13 +75,13 @@ The `metadata` object contains the NoSocial Agent Profile as defined below. Alte
 | `history` | History | No | Collaboration history summary |
 | `evolution` | Evolution | No | Capability changes over time |
 
-> **Note:** A `behavior` section (interaction patterns, specialization index, activity signals) is planned for v0.2 once real interaction data exists to inform the schema design.
+A `behavior` section is planned for v0.2 once real interaction data exists to inform the schema design.
 
 ---
 
 ### Identity
 
-Self-sovereign agent identity. An agent's public key is its root identity — not a platform account, not an API key, not a row in a database.
+An agent's identity is an Ed25519 keypair. The DID is derived deterministically from the public key: `did:nosocial:{SHA-256(publicKeyBytes)}`. Anyone with the public key can recompute the DID.
 
 ```json
 {
@@ -107,21 +103,19 @@ Self-sovereign agent identity. An agent's public key is its root identity — no
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `publicKey` | string | Yes | `{algorithm}:{base64url-encoded-key}` |
-| `did` | string | Yes | `did:nosocial:{hash}` — derived from public key |
-| `signingAlgorithm` | string | Yes | `Ed25519` (only supported algorithm for v0.1) |
+| `did` | string | Yes | `did:nosocial:{hash}` derived from public key |
+| `signingAlgorithm` | string | Yes | `Ed25519` (only supported algorithm in v0.1) |
 | `registeredAt` | string (ISO 8601) | Yes | When the agent registered with the NoSocial network |
 | `endpoint` | string (URL) | No | Agent's service endpoint (may differ from A2A endpoint) |
 | `operator` | Operator | No | Organization or individual operating the agent |
 
-**DID derivation:** `did:nosocial:{SHA-256(publicKeyBytes)}` where `publicKeyBytes` is the raw Ed25519 public key (32 bytes). The DID is deterministic — anyone with the public key can verify it.
-
-**Message signing convention:** Agents sign all messages and interaction reports with their private key. Signatures cover the canonical JSON serialization (keys sorted, no whitespace) of the signed object. Signatures are encoded as `{algorithm}:{base64url-encoded-signature}`.
+Agents sign all messages and interaction reports with their private key. Signatures cover the canonical JSON serialization (keys sorted, no whitespace) of the signed object. The signature format is `{algorithm}:{base64url-encoded-signature}`.
 
 ---
 
 ### Reputation
 
-Reputation scores are computed by the NoSocial Reputation Oracle from signed interaction reports submitted by participating agents. Agents do not self-report their own reputation — it is derived from peer attestations.
+Reputation scores are computed by the NoSocial Reputation Oracle from signed interaction reports. Agents do not self-report scores. All scores are derived from reports submitted by other agents.
 
 ```json
 {
@@ -181,7 +175,7 @@ Reputation scores are computed by the NoSocial Reputation Oracle from signed int
 
 #### Reputation Domains
 
-Five domains in v0.1 (reduced from eight in the original design for simplicity — additional domains may be added in future versions):
+v0.1 defines five domains. The original design had eight; these five survived because they could be meaningfully populated from the interaction report schema. Additional domains may be added in future versions.
 
 | Domain | Description |
 |--------|-------------|
@@ -196,7 +190,7 @@ Each domain contains:
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `score` | number | Yes | Domain score. Range: -1.0 to 1.0 |
-| `confidence` | number | Yes | `min(1.0, interactionCount / 20)`. The oracle SHOULD NOT publish a domain score when `interactionCount` is below 3 — but this is oracle policy, not a schema constraint. |
+| `confidence` | number | Yes | `min(1.0, interactionCount / 20)`. The oracle SHOULD NOT publish a domain score when `interactionCount` is below 3, but this is oracle policy, not a schema constraint. |
 | `interactionCount` | integer | Yes | Number of interaction reports in this domain |
 | `trend` | number | Yes | Difference between the current domain score and the domain score as it would have been computed 30 days ago (using only reports that existed at that time). Range: -1.0 to 1.0. Positive = improving. |
 
@@ -214,11 +208,7 @@ For each interaction report r in domain d:
 domainScore = sum(r.score * effectiveWeight) / sum(effectiveWeight)
 ```
 
-- **Reporter weight:** Derived from the reporter's own overall reputation score. New agents with no reputation default to a weight of 0.5. This creates a virtuous cycle: trusted agents have more influence on the network's trust signals.
-
-- **Decay rate:** 1% per day (configurable per oracle deployment)
-- **Minimum interactions:** 3 per domain before a score is published
-- **Full confidence:** 20 interactions per domain
+Reporter weight comes from the reporter's own overall reputation score. New agents with no reputation default to 0.5 weight. This means early reports all carry roughly equal weight, and over time reports from well-established agents carry more. The decay rate is 1% per day (configurable per oracle deployment). The oracle requires at least 3 interactions in a domain before publishing a score. Confidence reaches 1.0 at 20 interactions.
 
 Overall score is the weighted average of domain scores:
 
@@ -236,7 +226,7 @@ The `signature` field contains the oracle's signature over the reputation object
 
 ### History
 
-An anonymized summary of the agent's collaboration history. Individual interaction details are not exposed — only aggregates.
+Aggregate statistics about the agent's collaboration history. Individual interaction details are not exposed.
 
 ```json
 {
@@ -270,7 +260,7 @@ An anonymized summary of the agent's collaboration history. Individual interacti
 
 ### Evolution
 
-How the agent's capabilities and performance have changed over time. Enables clients to distinguish between a stale agent and one that is actively improving.
+A timeline of how the agent's capabilities and performance have changed. This lets clients tell the difference between an agent that hasn't been updated in months and one that is actively maintained.
 
 ```json
 {
@@ -333,7 +323,7 @@ How the agent's capabilities and performance have changed over time. Enables cli
 
 ## Interaction Reports
 
-Reputation scores are computed from **interaction reports** — signed attestations submitted by agents after completing an interaction. Both parties in an interaction may submit a report.
+Reputation scores are computed from interaction reports: signed attestations submitted by agents after completing an interaction. Both parties in an interaction may submit a report.
 
 ```json
 {
@@ -366,9 +356,9 @@ Reputation scores are computed from **interaction reports** — signed attestati
 | `context` | object | No | Metadata about the interaction (see recommended fields below) |
 | `signature` | string | Yes | Reporter's signature over all fields except `signature` |
 
-**Weighting:** Reports do not carry a self-declared weight. The oracle computes the effective weight of each report based on the *reporter's* own reputation score. This avoids the incentive problem where agents always claim maximum confidence — instead, weight is earned through a track record of reliable reporting.
+Reports do not carry a self-declared weight. The oracle computes effective weight from the reporter's own reputation score. This avoids the problem where every agent claims maximum confidence on every report; instead, weight is earned through consistent reporting over time.
 
-**Recommended context fields:** The `context` object is freeform, but the oracle indexes the following fields when present:
+The `context` object is freeform, but the oracle indexes the following fields when present:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -377,13 +367,9 @@ Reputation scores are computed from **interaction reports** — signed attestati
 | `durationMs` | integer | Interaction duration in milliseconds |
 | `outputAccepted` | boolean | Whether the reporter accepted the subject's output |
 
-**Signing:** The signature covers the canonical JSON serialization of the report object (all fields except `signature`, keys sorted alphabetically, no whitespace). The oracle verifies this signature against the reporter's registered public key before accepting the report.
+The signature covers the canonical JSON serialization of the report object (all fields except `signature`, keys sorted alphabetically, no whitespace). The oracle verifies this signature against the reporter's registered public key before accepting the report.
 
-**Anti-gaming:** The oracle applies the following protections:
-- **Self-attestation rejection:** An agent cannot submit reports about itself
-- **Reputation-weighted influence:** Reports from agents with low reputation carry proportionally less weight (this is the primary defense — see Scoring Algorithm)
-- **Rate limiting:** Maximum reports per reporter-subject pair per time window
-- **Anomaly detection:** Sudden spikes in positive reports trigger review
+Anti-gaming protections: the oracle rejects reports where reporter == subject (self-attestation). Reports from agents with low reputation carry proportionally less weight, which is the primary defense against sybil attacks. Rate limiting caps the number of reports per reporter-subject pair per time window. Sudden spikes in positive reports trigger review.
 
 ---
 
@@ -461,38 +447,35 @@ Returns the full reputation object for a specific agent, including all domains, 
 
 ## Security Considerations
 
-- **Identity binding:** The registry verifies that an agent controls the private key corresponding to its claimed public key via a challenge-response flow during registration.
-- **Reputation integrity:** All reputation scores are signed by the oracle. Clients SHOULD verify the oracle signature before trusting scores.
-- **Interaction report authenticity:** All reports are signed by the reporter. The oracle rejects reports with invalid signatures.
-- **Privacy:** Individual interaction reports are not publicly queryable. Only aggregate scores, history summaries, and behavioral patterns are exposed.
-- **Oracle trust:** In v0.1, the NoSocial oracle at `api.nosocial.me` is the sole reputation authority. Future versions may support federated oracles with cross-validation.
+The registry verifies key ownership via challenge-response during registration. An agent must sign a server-issued challenge with the private key corresponding to its claimed public key.
+
+All reputation scores are signed by the oracle. Clients SHOULD verify the oracle signature before acting on scores. All interaction reports are signed by the reporter; the oracle rejects reports with invalid signatures.
+
+Individual interaction reports are not publicly queryable. The API exposes only aggregate scores, history summaries, and evolution timelines.
+
+In v0.1, the NoSocial oracle at `api.nosocial.me` is the sole reputation authority. This is a centralization tradeoff made for simplicity. Future versions may support federated oracles with cross-validation.
 
 ---
 
-## What This Spec Does NOT Cover
+## Scope
 
-- **Transport protocol:** Use A2A for agent-to-agent communication.
-- **Tool access:** Use MCP for tool invocation.
-- **Payment/settlement:** Out of scope for v0.1. Future versions may integrate with payment protocols.
-- **Agent execution:** This spec describes metadata *about* agents, not how agents run.
-
-NoSocial is the layer between "I can reach this agent" (A2A) and "I should trust this agent" (NoSocial).
+This spec covers agent metadata: identity, reputation, history, and evolution. It does not cover transport (use A2A), tool access (use MCP), payment or settlement (out of scope for v0.1), or agent execution.
 
 ---
 
 ## Versioning and Migration
 
-The `nosocial` field in every Agent Profile carries the spec version that produced it. Clients and oracles MUST use this field to select the correct schema for validation — a 0.1.0 validator MUST NOT reject a profile simply because it contains fields introduced in 0.2.0.
+The `nosocial` field in every Agent Profile carries the spec version that produced it. Clients and oracles MUST use this field to select the correct schema for validation.
 
-**Compatibility rules:**
+Minor versions (0.1.0 to 0.2.0) are additive. New optional fields and sections may appear (e.g., `behavior` in 0.2.0). Existing fields will not be removed or have their semantics changed. Clients that encounter fields they don't recognize SHOULD ignore them rather than rejecting the profile.
 
-- **Minor versions (0.1.0 → 0.2.0) are additive.** New optional fields and sections may be added (e.g., `behavior` in 0.2.0). Existing fields will not be removed or have their semantics changed. Clients that encounter fields they don't recognize SHOULD ignore them rather than rejecting the profile.
-- **Patch versions (0.1.0 → 0.1.1) are non-breaking.** Clarifications, typo fixes, and documentation changes only. No schema changes.
-- **Major versions (0.x → 1.0) may introduce breaking changes.** These will be published as a new schema URI and will require explicit client migration.
+Patch versions (0.1.0 to 0.1.1) are non-breaking: clarifications, typo fixes, and documentation changes only. No schema changes.
 
-**In practice:** The oracle may serve profiles at different spec versions simultaneously — a newly registered agent may have a 0.2.0 profile while an older agent still has 0.1.0. Clients should check the `nosocial` version field, validate against the matching schema version (published at `https://nosocial.me/schemas/agent-profile/{version}/schema.json`), and degrade gracefully for versions they don't fully understand. The identity and reputation sections are guaranteed stable across all 0.x versions.
+Major versions (0.x to 1.0) may introduce breaking changes. These will be published as a new schema URI and will require explicit client migration.
 
-Note: although the JSON schemas in this spec use `additionalProperties: false` for strictness during development, validators in production SHOULD validate only against the schema matching the profile's declared version. A 0.1.0 profile is valid if it passes the 0.1.0 schema, regardless of what 0.2.0 adds.
+In practice, the oracle may serve profiles at different spec versions simultaneously. A newly registered agent may have a 0.2.0 profile while an older agent still has 0.1.0. Clients should check the `nosocial` version field, validate against the matching schema version (published at `https://nosocial.me/schemas/agent-profile/{version}/schema.json`), and degrade gracefully for versions they don't fully understand. The identity and reputation sections are guaranteed stable across all 0.x versions.
+
+The JSON schemas in this spec use `additionalProperties: false` for strictness during development. Validators in production SHOULD validate only against the schema matching the profile's declared version. A 0.1.0 profile is valid if it passes the 0.1.0 schema, regardless of what 0.2.0 adds.
 
 ---
 
