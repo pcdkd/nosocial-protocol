@@ -23,6 +23,9 @@ if (existsSync(DOCS)) {
   mkdirSync(DOCS, { recursive: true });
 }
 
+// Prevent Jekyll processing on GitHub Pages
+writeFileSync(join(DOCS, '.nojekyll'), '');
+
 // --- Copy shared CSS ---
 
 cpSync(join(SITE, 'style.css'), join(DOCS, 'style.css'));
