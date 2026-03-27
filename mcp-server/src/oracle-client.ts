@@ -3,6 +3,7 @@
  */
 
 const DEFAULT_ORACLE_URL = "https://api.nosocial.me";
+const TIMEOUT_MS = 10_000;
 
 export class OracleClient {
   private baseUrl: string;
@@ -11,15 +12,25 @@ export class OracleClient {
     this.baseUrl = (oracleUrl || DEFAULT_ORACLE_URL).replace(/\/$/, "");
   }
 
+  private async fetchWithTimeout(url: string): Promise<Response> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+      return await fetch(url, { signal: controller.signal });
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
   async getAgent(did: string): Promise<AgentProfile | null> {
-    const resp = await fetch(`${this.baseUrl}/v1/agents/${encodeURIComponent(did)}`);
+    const resp = await this.fetchWithTimeout(`${this.baseUrl}/v1/agents/${encodeURIComponent(did)}`);
     if (resp.status === 404) return null;
     if (!resp.ok) throw new Error(`Oracle error: ${resp.status}`);
     return resp.json();
   }
 
   async getReputation(did: string): Promise<Reputation | null> {
-    const resp = await fetch(`${this.baseUrl}/v1/agents/${encodeURIComponent(did)}/reputation`);
+    const resp = await this.fetchWithTimeout(`${this.baseUrl}/v1/agents/${encodeURIComponent(did)}/reputation`);
     if (resp.status === 404) return null;
     if (!resp.ok) throw new Error(`Oracle error: ${resp.status}`);
     return resp.json();
@@ -33,7 +44,7 @@ export class OracleClient {
     if (params.sort) query.set("sort", params.sort);
     if (params.limit) query.set("limit", String(params.limit));
 
-    const resp = await fetch(`${this.baseUrl}/v1/agents/search?${query}`);
+    const resp = await this.fetchWithTimeout(`${this.baseUrl}/v1/agents/search?${query}`);
     if (!resp.ok) throw new Error(`Oracle error: ${resp.status}`);
     return resp.json();
   }

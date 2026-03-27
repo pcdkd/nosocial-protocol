@@ -24,42 +24,46 @@ server.registerTool(
     }),
   },
   async ({ did }) => {
-    const agent = await oracle.getAgent(did);
-    if (!agent) {
-      return {
-        content: [{ type: "text" as const, text: `No agent found with DID: ${did}` }],
-      };
-    }
-
-    const lines = [
-      `**${agent.name || "Unnamed Agent"}** (${agent.did})`,
-      "",
-      `**Registered:** ${agent.registeredAt}`,
-      agent.endpoint ? `**Endpoint:** ${agent.endpoint}` : null,
-      agent.a2aCardUrl ? `**A2A Card:** ${agent.a2aCardUrl}` : null,
-      "",
-      `**Skills:** ${agent.skills.map((s) => s.name || s.id).join(", ") || "None listed"}`,
-    ].filter(Boolean);
-
-    if (agent.reputation) {
-      const r = agent.reputation;
-      lines.push(
-        "",
-        `**Reputation** (${r.overall.totalInteractions} interactions):`,
-        `  Overall: ${formatScore(r.overall.score)} (confidence: ${(r.overall.confidence * 100).toFixed(0)}%)`,
-      );
-      for (const [domain, ds] of Object.entries(r.domains)) {
-        lines.push(
-          `  ${formatDomain(domain)}: ${formatScore(ds.score)} (${ds.interactionCount} interactions, trend: ${formatTrend(ds.trend)})`,
-        );
+    try {
+      const agent = await oracle.getAgent(did);
+      if (!agent) {
+        return {
+          content: [{ type: "text" as const, text: `No agent found with DID: ${did}` }],
+        };
       }
-    } else {
-      lines.push("", "**Reputation:** No data yet");
-    }
 
-    return {
-      content: [{ type: "text" as const, text: lines.join("\n") }],
-    };
+      const lines = [
+        `**${agent.name || "Unnamed Agent"}** (${agent.did})`,
+        "",
+        `**Registered:** ${agent.registeredAt}`,
+        agent.endpoint ? `**Endpoint:** ${agent.endpoint}` : null,
+        agent.a2aCardUrl ? `**A2A Card:** ${agent.a2aCardUrl}` : null,
+        "",
+        `**Skills:** ${agent.skills.map((s) => s.name || s.id).join(", ") || "None listed"}`,
+      ].filter(Boolean);
+
+      if (agent.reputation) {
+        const r = agent.reputation;
+        lines.push(
+          "",
+          `**Reputation** (${r.overall.totalInteractions} interactions):`,
+          `  Overall: ${formatScore(r.overall.score)} (confidence: ${(r.overall.confidence * 100).toFixed(0)}%)`,
+        );
+        for (const [domain, ds] of Object.entries(r.domains)) {
+          lines.push(
+            `  ${formatDomain(domain)}: ${formatScore(ds.score)} (${ds.interactionCount} interactions, trend: ${formatTrend(ds.trend)})`,
+          );
+        }
+      } else {
+        lines.push("", "**Reputation:** No data yet");
+      }
+
+      return {
+        content: [{ type: "text" as const, text: lines.join("\n") }],
+      };
+    } catch (e) {
+      return errorResult(e);
+    }
   },
 );
 
@@ -106,39 +110,43 @@ server.registerTool(
     }),
   },
   async (params) => {
-    const result = await oracle.searchAgents({
-      capability: params.capability,
-      minReputation: params.min_reputation,
-      domain: params.domain,
-      sort: params.sort,
-      limit: params.limit || 10,
-    });
+    try {
+      const result = await oracle.searchAgents({
+        capability: params.capability,
+        minReputation: params.min_reputation,
+        domain: params.domain,
+        sort: params.sort,
+        limit: params.limit || 10,
+      });
 
-    if (result.agents.length === 0) {
+      if (result.agents.length === 0) {
+        return {
+          content: [{ type: "text" as const, text: "No agents found matching your criteria." }],
+        };
+      }
+
+      const lines = [`Found ${result.total} agent(s):`, ""];
+
+      for (const agent of result.agents) {
+        const rep = agent.reputation as Record<string, Record<string, number>> | null;
+        const overall = rep?.overall;
+        const score = overall?.score != null ? formatScore(overall.score) : "no data";
+
+        lines.push(
+          `- **${agent.name || "Unnamed"}** (${agent.did})`,
+          `  Skills: ${agent.skills.join(", ") || "none"}`,
+          `  Reputation: ${score}`,
+          agent.serviceEndpoint ? `  Endpoint: ${agent.serviceEndpoint}` : "",
+          "",
+        );
+      }
+
       return {
-        content: [{ type: "text" as const, text: "No agents found matching your criteria." }],
+        content: [{ type: "text" as const, text: lines.filter(Boolean).join("\n") }],
       };
+    } catch (e) {
+      return errorResult(e);
     }
-
-    const lines = [`Found ${result.total} agent(s):`, ""];
-
-    for (const agent of result.agents) {
-      const rep = agent.reputation as Record<string, Record<string, number>> | null;
-      const overall = rep?.overall;
-      const score = overall?.score != null ? formatScore(overall.score) : "no data";
-
-      lines.push(
-        `- **${agent.name || "Unnamed"}** (${agent.did})`,
-        `  Skills: ${agent.skills.join(", ") || "none"}`,
-        `  Reputation: ${score}`,
-        agent.serviceEndpoint ? `  Endpoint: ${agent.serviceEndpoint}` : "",
-        "",
-      );
-    }
-
-    return {
-      content: [{ type: "text" as const, text: lines.filter(Boolean).join("\n") }],
-    };
   },
 );
 
@@ -155,39 +163,57 @@ server.registerTool(
     }),
   },
   async ({ did }) => {
-    const rep = await oracle.getReputation(did);
-    if (!rep) {
+    try {
+      const rep = await oracle.getReputation(did);
+      if (!rep) {
+        return {
+          content: [
+            { type: "text" as const, text: `No reputation data for agent: ${did}` },
+          ],
+        };
+      }
+
+      const lines = [
+        `**Reputation for ${did}**`,
+        "",
+        `**Overall:** ${formatScore(rep.overall.score)} (confidence: ${(rep.overall.confidence * 100).toFixed(0)}%, ${rep.overall.totalInteractions} total interactions)`,
+        `**Last updated:** ${rep.overall.updatedAt}`,
+        "",
+        "**Domain scores:**",
+      ];
+
+      for (const [domain, ds] of Object.entries(rep.domains)) {
+        lines.push(
+          `  ${formatDomain(domain)}:`,
+          `    Score: ${formatScore(ds.score)}`,
+          `    Confidence: ${(ds.confidence * 100).toFixed(0)}%`,
+          `    Interactions: ${ds.interactionCount}`,
+          `    Trend (30d): ${formatTrend(ds.trend)}`,
+        );
+      }
+
       return {
-        content: [
-          { type: "text" as const, text: `No reputation data for agent: ${did}` },
-        ],
+        content: [{ type: "text" as const, text: lines.join("\n") }],
       };
+    } catch (e) {
+      return errorResult(e);
     }
-
-    const lines = [
-      `**Reputation for ${did}**`,
-      "",
-      `**Overall:** ${formatScore(rep.overall.score)} (confidence: ${(rep.overall.confidence * 100).toFixed(0)}%, ${rep.overall.totalInteractions} total interactions)`,
-      `**Last updated:** ${rep.overall.updatedAt}`,
-      "",
-      "**Domain scores:**",
-    ];
-
-    for (const [domain, ds] of Object.entries(rep.domains)) {
-      lines.push(
-        `  ${formatDomain(domain)}:`,
-        `    Score: ${formatScore(ds.score)}`,
-        `    Confidence: ${(ds.confidence * 100).toFixed(0)}%`,
-        `    Interactions: ${ds.interactionCount}`,
-        `    Trend (30d): ${formatTrend(ds.trend)}`,
-      );
-    }
-
-    return {
-      content: [{ type: "text" as const, text: lines.join("\n") }],
-    };
   },
 );
+
+// Error handling
+
+function errorResult(e: unknown) {
+  const msg = e instanceof Error ? e.message : "unknown error";
+  const hint = msg.includes("abort")
+    ? " (oracle timed out — it may be down or slow)"
+    : "";
+  return {
+    content: [
+      { type: "text" as const, text: `Error contacting NoSocial oracle: ${msg}${hint}` },
+    ],
+  };
+}
 
 // Helpers
 
