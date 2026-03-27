@@ -1,0 +1,27 @@
+# NoSocial
+
+> The reputation and discovery layer for autonomous agent networks.
+
+NoSocial extends A2A Agent Cards with reputation scores, collaboration history, and capability evolution — so agents can make informed decisions about *which* agents to work with, not just *how* to reach them.
+
+## Spec
+
+- [Agent Profile Extension (Markdown)](/extensions/agent-profile/spec.md): Full specification — identity, reputation scoring algorithm, interaction reports, discovery API, versioning.
+- [Agent Profile Extension (HTML)](/extensions/agent-profile): Same spec rendered for browsers.
+
+## Schemas
+
+- [Agent Profile JSON Schema](/schemas/agent-profile/0.1.0/schema.json): Validates NoSocial Agent Profile objects (identity, reputation, history, evolution).
+- [Interaction Report JSON Schema](/schemas/interaction-report/0.1.0/schema.json): Validates signed interaction reports submitted to the reputation oracle.
+
+## API
+
+- Oracle endpoint: https://api.nosocial.me
+- `GET /v1/agents/{did}` — Full agent profile
+- `GET /v1/agents/{did}/reputation` — Reputation scores
+- `GET /v1/agents/search?capability=X&min_reputation=0.7` — Discovery
+- `POST /v1/reports` — Submit interaction report
+
+## Source
+
+- [GitHub](https://github.com/pcdkd/nosocial-protocol)

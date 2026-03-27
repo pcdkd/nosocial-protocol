@@ -47,6 +47,7 @@ const landingHtml = `<!DOCTYPE html>
   <meta name="description" content="NoSocial is the reputation and discovery layer for autonomous agent networks. Identity, trust, and observability for the agent economy.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='2' fill='%230a0a0a'/><text x='3' y='13' font-size='12' fill='%2300ff41'>▌</text></svg>">
   <link rel="stylesheet" href="${BASE}/style.css">
+  <link rel="alternate" type="text/plain" href="${BASE}/llms.txt" title="LLM-readable site index">
 </head>
 <body>
   <main class="landing">
@@ -97,6 +98,7 @@ const specHtml = `<!DOCTYPE html>
   <meta name="description" content="The NoSocial Agent Profile Extension adds reputation, history, and evolution metadata to A2A Agent Cards.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='2' fill='%230a0a0a'/><text x='3' y='13' font-size='12' fill='%2300ff41'>▌</text></svg>">
   <link rel="stylesheet" href="${BASE}/style.css">
+  <link rel="alternate" type="text/markdown" href="${BASE}/extensions/agent-profile/spec.md" title="Spec (Markdown)">
 </head>
 <body>
   <nav class="spec-nav">
@@ -111,6 +113,9 @@ const specHtml = `<!DOCTYPE html>
 
 mkdirSync(join(DOCS, 'extensions', 'agent-profile'), { recursive: true });
 writeFileSync(join(DOCS, 'extensions', 'agent-profile', 'index.html'), specHtml);
+
+// Raw markdown for LLM consumption
+writeFileSync(join(DOCS, 'extensions', 'agent-profile', 'spec.md'), specMd);
 
 // --- Schema files ---
 
@@ -130,9 +135,77 @@ for (const { src, dest } of schemas) {
   cpSync(src, dest);
 }
 
+// --- llms.txt (site index for LLM ingestion) ---
+
+const llmsTxt = `# NoSocial
+
+> The reputation and discovery layer for autonomous agent networks.
+
+NoSocial extends A2A Agent Cards with reputation scores, collaboration history, and capability evolution — so agents can make informed decisions about *which* agents to work with, not just *how* to reach them.
+
+## Spec
+
+- [Agent Profile Extension (Markdown)](${BASE}/extensions/agent-profile/spec.md): Full specification — identity, reputation scoring algorithm, interaction reports, discovery API, versioning.
+- [Agent Profile Extension (HTML)](${BASE}/extensions/agent-profile): Same spec rendered for browsers.
+
+## Schemas
+
+- [Agent Profile JSON Schema](${BASE}/schemas/agent-profile/0.1.0/schema.json): Validates NoSocial Agent Profile objects (identity, reputation, history, evolution).
+- [Interaction Report JSON Schema](${BASE}/schemas/interaction-report/0.1.0/schema.json): Validates signed interaction reports submitted to the reputation oracle.
+
+## API
+
+- Oracle endpoint: https://api.nosocial.me
+- \`GET /v1/agents/{did}\` — Full agent profile
+- \`GET /v1/agents/{did}/reputation\` — Reputation scores
+- \`GET /v1/agents/search?capability=X&min_reputation=0.7\` — Discovery
+- \`POST /v1/reports\` — Submit interaction report
+
+## Source
+
+- [GitHub](https://github.com/pcdkd/nosocial-protocol)
+`;
+
+writeFileSync(join(DOCS, 'llms.txt'), llmsTxt);
+
+// --- llms-full.txt (complete spec + schemas for single-fetch LLM ingestion) ---
+
+const agentProfileSchema = readFileSync(join(SPEC, 'schemas', 'agent-profile.schema.json'), 'utf-8');
+const interactionReportSchema = readFileSync(join(SPEC, 'schemas', 'interaction-report.schema.json'), 'utf-8');
+
+const llmsFullTxt = `# NoSocial — Complete Specification
+
+> The reputation and discovery layer for autonomous agent networks.
+
+---
+
+${specMd}
+
+---
+
+## Agent Profile JSON Schema
+
+\`\`\`json
+${agentProfileSchema}
+\`\`\`
+
+---
+
+## Interaction Report JSON Schema
+
+\`\`\`json
+${interactionReportSchema}
+\`\`\`
+`;
+
+writeFileSync(join(DOCS, 'llms-full.txt'), llmsFullTxt);
+
 console.log('Site built → docs/');
 console.log('  index.html');
 console.log('  style.css');
+console.log('  llms.txt');
+console.log('  llms-full.txt');
 console.log('  extensions/agent-profile/index.html');
+console.log('  extensions/agent-profile/spec.md');
 console.log('  schemas/agent-profile/0.1.0/schema.json');
 console.log('  schemas/interaction-report/0.1.0/schema.json');
