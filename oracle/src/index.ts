@@ -1,15 +1,4 @@
 import * as Sentry from "@sentry/node";
-
-// Init Sentry before anything else
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.RAILWAY_ENVIRONMENT_NAME || "development",
-    release: "oracle@0.1.0",
-    tracesSampleRate: 1.0,
-  });
-}
-
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
