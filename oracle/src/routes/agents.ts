@@ -7,6 +7,7 @@ import {
   searchAgents,
 } from "../services/agents.js";
 import { computeReputation } from "../services/reputation.js";
+import { trackEvent } from "../analytics.js";
 
 export const agentRoutes = new Hono();
 
@@ -19,6 +20,7 @@ agentRoutes.post("/challenge", async (c) => {
 
   try {
     const result = createChallenge(getDb(), body);
+    trackEvent(result.did, "agent_challenge_requested");
     return c.json(result, 201);
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Unknown error";
@@ -43,6 +45,10 @@ agentRoutes.post("/register", async (c) => {
       body.signature,
       body
     );
+    trackEvent(agent.did, "agent_registered", {
+      name: agent.name,
+      skillCount: agent.skills?.length ?? 0,
+    });
     return c.json(agent, 201);
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Unknown error";
@@ -64,6 +70,13 @@ agentRoutes.get("/search", (c) => {
   };
 
   const agents = searchAgents(getDb(), params);
+
+  trackEvent("oracle", "agent_search", {
+    capability: params.capability,
+    minReputation: params.minReputation,
+    domain: params.domain,
+    resultCount: agents.length,
+  });
 
   // Attach reputation summaries
   const results = agents.map((a) => {
