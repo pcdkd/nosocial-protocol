@@ -4,9 +4,6 @@ Event-to-report mapping for LangChain/LangGraph callbacks.
 Maps LangChain callback events to NoSocial report parameters (domain + score).
 """
 
-from typing import Optional
-
-
 def map_chain_end(outputs: dict) -> tuple[str, float, dict]:
     """Map on_chain_end to a NoSocial report."""
     has_output = bool(outputs) and any(

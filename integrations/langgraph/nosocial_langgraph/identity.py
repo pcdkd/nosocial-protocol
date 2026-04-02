@@ -5,15 +5,13 @@ Each agent gets a persistent NoSocial identity (keypair + DID).
 Keys are stored as PEM files in a configurable directory.
 """
 
+import base64
 import hashlib
 import json
 import os
 from pathlib import Path
 
-from cryptography.hazmat.primitives.asymmetric.ed25519 import (
-    Ed25519PrivateKey,
-    Ed25519PublicKey,
-)
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
     NoEncryption,
@@ -21,16 +19,16 @@ from cryptography.hazmat.primitives.serialization import (
     PublicFormat,
 )
 
-import base64
-
 
 def _base64url_encode(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
 
 
-def _base64url_decode(s: str) -> bytes:
-    padding = "=" * ((4 - len(s) % 4) % 4)
-    return base64.urlsafe_b64decode(s + padding)
+def _safe_filename(name: str) -> str:
+    """Derive a safe filename from an agent name using a hash prefix."""
+    h = hashlib.sha256(name.encode()).hexdigest()[:12]
+    safe = "".join(c if c.isalnum() or c in "-_" else "_" for c in name)
+    return f"{safe}_{h}"
 
 
 class AgentIdentity:
@@ -53,7 +51,7 @@ class AgentIdentity:
         """Load an existing identity for an agent name, or create one."""
         path = Path(keys_dir)
         path.mkdir(parents=True, exist_ok=True)
-        key_file = path / f"{name}.pem"
+        key_file = path / f"{_safe_filename(name)}.pem"
 
         if key_file.exists():
             pem_data = key_file.read_bytes()
@@ -67,7 +65,9 @@ class AgentIdentity:
         pem_data = identity._private_key.private_bytes(
             Encoding.PEM, PrivateFormat.PKCS8, NoEncryption()
         )
-        key_file.write_bytes(pem_data)
+        fd = os.open(key_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "wb") as f:
+            f.write(pem_data)
         return identity
 
     def sign(self, obj: dict) -> str:

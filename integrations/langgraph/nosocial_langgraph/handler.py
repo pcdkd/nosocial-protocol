@@ -8,12 +8,12 @@ Usage:
     result = graph.invoke(input, config={"callbacks": [handler]})
 """
 
-import hashlib
 import logging
 import time
 import uuid
 from typing import Any, Optional, Sequence
 
+import requests
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.documents import Document
 
@@ -24,8 +24,6 @@ from nosocial_langgraph.mapping import (
     map_retriever_end,
     map_tool_end,
 )
-
-import requests
 
 logger = logging.getLogger("nosocial")
 
@@ -72,8 +70,17 @@ class NoSocialCallbackHandler(BaseCallbackHandler):
                 timeout=10,
             )
             if resp.status_code == 409:
-                self._registered.add(identity.did)
-                return True
+                # Check if this is genuinely "already registered" vs another 409 error
+                error_msg = ""
+                try:
+                    error_msg = (resp.json().get("error", "") or "").lower()
+                except ValueError:
+                    pass
+                if "already registered" in error_msg or "already exists" in error_msg:
+                    self._registered.add(identity.did)
+                    return True
+                logger.warning(f"Oracle 409 during challenge for '{name}': {error_msg}")
+                return False
             resp.raise_for_status()
             challenge_data = resp.json()
 
@@ -88,6 +95,9 @@ class NoSocialCallbackHandler(BaseCallbackHandler):
                 },
                 timeout=10,
             )
+            if resp.status_code == 409:
+                self._registered.add(identity.did)
+                return True
             resp.raise_for_status()
             self._registered.add(identity.did)
             logger.info(f"Registered agent '{name}' as {identity.did}")
@@ -167,6 +177,9 @@ class NoSocialCallbackHandler(BaseCallbackHandler):
         )
 
     # --- LangChain callback methods ---
+    # TODO: Consider an AsyncNoSocialCallbackHandler using httpx for
+    # async LangGraph graphs. Sync callbacks are acceptable for now since
+    # LangChain v0.3+ backgrounds callbacks by default.
 
     def on_chain_end(
         self,
@@ -176,8 +189,7 @@ class NoSocialCallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[uuid.UUID] = None,
         **kwargs: Any,
     ) -> None:
-        run_name = kwargs.get("tags", [None])[0] if kwargs.get("tags") else None
-        node_name = run_name or kwargs.get("name", "unknown-node")
+        node_name = kwargs.get("name", "unknown-node")
         domain, score, context = map_chain_end(outputs)
         self._report_event(node_name, domain, score, context, parent_run_id)
 
@@ -207,12 +219,12 @@ class NoSocialCallbackHandler(BaseCallbackHandler):
 
     def on_retriever_end(
         self,
-        documents: Sequence[Document],
+        documents: Optional[Sequence[Document]],
         *,
         run_id: uuid.UUID,
         parent_run_id: Optional[uuid.UUID] = None,
         **kwargs: Any,
     ) -> None:
         retriever_name = kwargs.get("name", "unknown-retriever")
-        domain, score, context = map_retriever_end(list(documents))
+        domain, score, context = map_retriever_end(list(documents or []))
         self._report_event(retriever_name, domain, score, context, parent_run_id)

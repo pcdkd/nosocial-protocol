@@ -12,10 +12,6 @@ def test_generate_identity():
     assert len(identity.did) == len("did:nosocial:") + 64  # sha256 hex
 
 
-def test_deterministic_did():
-    identity = AgentIdentity.generate()
-    assert identity.did == identity.did
-
 
 def test_load_or_create_persists():
     with tempfile.TemporaryDirectory() as tmpdir:
