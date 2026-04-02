@@ -26,12 +26,12 @@ statsRoutes.get("/", (c) => {
 
   const reportsLast24h =
     db.prepare(
-      "SELECT COUNT(*) as count FROM interaction_reports WHERE received_at > datetime('now', '-1 day')"
+      "SELECT COUNT(*) as count FROM interaction_reports WHERE datetime(received_at) > datetime('now', '-1 day')"
     ).get() as { count: number };
 
   const agentsLast7d =
     db.prepare(
-      "SELECT COUNT(*) as count FROM agents WHERE registered_at > datetime('now', '-7 days')"
+      "SELECT COUNT(*) as count FROM agents WHERE datetime(registered_at) > datetime('now', '-7 days')"
     ).get() as { count: number };
 
   const topCapabilities = db
@@ -56,9 +56,9 @@ statsRoutes.get("/", (c) => {
       last24h: reportsLast24h.count,
       byDomain: Object.fromEntries(reportsByDomain.map((r) => [r.domain, r.count])),
     },
-    topCapabilities: topCapabilities.map((c) => ({
-      capability: c.skill_id,
-      agentCount: c.count,
+    topCapabilities: topCapabilities.map((cap) => ({
+      capability: cap.skill_id,
+      agentCount: cap.count,
     })),
   });
 });

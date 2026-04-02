@@ -71,7 +71,10 @@ agentRoutes.get("/search", (c) => {
 
   const agents = searchAgents(getDb(), params);
 
-  trackEvent("oracle", "agent_search", {
+  // Search is anonymous — no agent DID available. Using "anonymous" means
+  // unique-user counts won't work for this event, but total counts and
+  // property breakdowns are still useful.
+  trackEvent("anonymous", "agent_search", {
     capability: params.capability,
     minReputation: params.minReputation,
     domain: params.domain,

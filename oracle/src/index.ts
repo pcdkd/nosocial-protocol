@@ -51,9 +51,12 @@ const server = serve({ fetch: app.fetch, port }, () => {
   console.log(`NoSocial Oracle running on http://localhost:${port}`);
 });
 
-process.on("SIGTERM", async () => {
-  await shutdownAnalytics();
+const shutdown = async () => {
   server.close();
-});
+  await shutdownAnalytics();
+};
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
 export { app };
