@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { getDb } from "../db/index.js";
 import { submitReport } from "../services/reports.js";
+import { trackEvent } from "../analytics.js";
 
 export const reportRoutes = new Hono();
 
@@ -29,6 +30,11 @@ reportRoutes.post("/", async (c) => {
   if (!result.accepted) {
     return c.json({ error: result.error }, 400);
   }
+
+  trackEvent(body.reporter, "report_submitted", {
+    domain: body.domain,
+    subject: body.subject,
+  });
 
   return c.json({ accepted: true, reportId: body.id }, 201);
 });

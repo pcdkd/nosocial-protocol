@@ -4,7 +4,9 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { agentRoutes } from "./routes/agents.js";
 import { reportRoutes } from "./routes/reports.js";
+import { statsRoutes } from "./routes/stats.js";
 import { getDb } from "./db/index.js";
+import { shutdownAnalytics } from "./analytics.js";
 import { serve } from "@hono/node-server";
 
 const app = new Hono();
@@ -34,6 +36,7 @@ app.get("/health", (c) => {
 // API routes
 app.route("/v1/agents", agentRoutes);
 app.route("/v1/reports", reportRoutes);
+app.route("/v1/stats", statsRoutes);
 
 // Global error handler — catches unhandled errors in routes
 app.onError((err, c) => {
@@ -44,8 +47,16 @@ app.onError((err, c) => {
 
 const port = parseInt(process.env.PORT || "3000");
 
-serve({ fetch: app.fetch, port }, () => {
+const server = serve({ fetch: app.fetch, port }, () => {
   console.log(`NoSocial Oracle running on http://localhost:${port}`);
 });
+
+const shutdown = async () => {
+  server.close();
+  await shutdownAnalytics();
+};
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
 export { app };
