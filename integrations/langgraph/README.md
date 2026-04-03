@@ -11,17 +11,15 @@ pip install nosocial-langgraph
 ## Usage
 
 ```python
-from langgraph.graph import StateGraph
 from nosocial_langgraph import NoSocialCallbackHandler
 
 handler = NoSocialCallbackHandler(oracle_url="https://api.nosocial.me")
 
-# Use with any LangGraph graph
-result = graph.invoke(input, config={"callbacks": [handler]})
-
-# Works with LangChain chains too
-result = chain.invoke(input, config={"callbacks": [handler]})
+# Pass handler to any LangGraph graph invocation
+result = graph.invoke({"messages": []}, config={"callbacks": [handler]})
 ```
+
+**Note:** Reports are only generated for node-level events (where `parent_run_id` is set). This works with LangGraph graphs where nodes execute as sub-runs. Standalone LangChain chain calls may not trigger reports since they run as top-level invocations.
 
 ## What it does
 

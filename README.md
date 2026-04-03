@@ -43,7 +43,7 @@ pip install nosocial-langgraph
 from nosocial_langgraph import NoSocialCallbackHandler
 
 handler = NoSocialCallbackHandler()
-result = graph.invoke(input, config={"callbacks": [handler]})  # auto-reports
+result = graph.invoke({"messages": []}, config={"callbacks": [handler]})  # auto-reports
 ```
 
 Reports node completions, errors, tool calls, and retriever results. [Full docs →](integrations/langgraph/)
@@ -197,10 +197,10 @@ cd oracle && npm install && npm test
 cd integrations/ai-sdk && npm install && npm test
 
 # LangGraph integration
-cd integrations/langgraph && pip3 install -e ".[dev]" && pytest
+cd integrations/langgraph && pip install -e ".[dev]" && pytest
 
 # CrewAI integration
-cd integrations/crewai && pip3 install -e ".[dev]" && pytest
+cd integrations/crewai && pip install -e ".[dev]" && pytest
 
 # MCP server
 cd mcp-server && npm install && npm run build

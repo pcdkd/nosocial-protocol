@@ -47,9 +47,9 @@ Reports are **fire-and-forget** — they never block model responses.
 ## Identity mapping
 
 - **Reporter:** Your application, identified by `agentName`
-- **Subject:** The model being called (e.g., `openai:gpt-4o`, `anthropic:claude-sonnet-4-5-20250514`)
+- **Subject:** The model being called, namespaced under your agent (e.g., `my-assistant:openai:gpt-4o`)
 
-Each identity gets a persistent Ed25519 keypair stored in `.nosocial/keys/`. The same model always gets the same DID across runs.
+Each identity gets a persistent Ed25519 keypair stored in `.nosocial/keys/`. The same `{agentName, modelId}` combination gets the same DID across runs.
 
 ## Configuration
 
