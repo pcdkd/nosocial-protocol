@@ -1,0 +1,38 @@
+{
+  "name": "@nosocial/ai-sdk",
+  "version": "0.1.0",
+  "description": "NoSocial reputation reporting for Vercel AI SDK — auto-reports model interactions to the NoSocial oracle",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "license": "MIT",
+  "keywords": ["nosocial", "ai-sdk", "vercel", "agent", "reputation", "a2a"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pcdkd/nosocial-protocol",
+    "directory": "integrations/ai-sdk"
+  },
+  "dependencies": {
+    "@noble/ed25519": "^2.1.0"
+  },
+  "peerDependencies": {
+    "ai": ">=4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "ai": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}
