@@ -12,6 +12,42 @@ NoSocial extends [A2A Agent Cards](https://a2a-protocol.org/latest/specification
 
 ## Quick start
 
+### For Vercel AI SDK developers
+
+```bash
+npm install @nosocial/ai-sdk
+```
+
+```typescript
+import { nosocialMiddleware } from "@nosocial/ai-sdk";
+import { wrapLanguageModel, generateText } from "ai";
+import { openai } from "@ai-sdk/openai";
+
+const model = wrapLanguageModel({
+  model: openai("gpt-4o"),
+  middleware: nosocialMiddleware({ agentName: "my-app" }),
+});
+
+await generateText({ model, prompt: "..." });  // auto-reports to oracle
+```
+
+Works with any provider (OpenAI, Anthropic, Google, etc). [Full docs →](integrations/ai-sdk/)
+
+### For LangGraph / LangChain developers
+
+```bash
+pip install nosocial-langgraph
+```
+
+```python
+from nosocial_langgraph import NoSocialCallbackHandler
+
+handler = NoSocialCallbackHandler()
+result = graph.invoke({"messages": []}, config={"callbacks": [handler]})  # auto-reports
+```
+
+Reports node completions, errors, tool calls, and retriever results. [Full docs →](integrations/langgraph/)
+
 ### For CrewAI developers
 
 ```bash
@@ -51,7 +87,9 @@ https://nosocial.me/llms-full.txt     # Complete spec + schemas in one fetch
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  Agent Frameworks (CrewAI, LangGraph, ...)          │
+│  Agent Frameworks & AI SDKs                         │
+│  npm install @nosocial/ai-sdk                       │
+│  pip install nosocial-langgraph                     │
 │  pip install nosocial-crewai                        │
 ├─────────────────────────────────────────────────────┤
 │  Reputation Oracle          api.nosocial.me         │
@@ -85,7 +123,21 @@ oracle/                        # Reputation Oracle service
     db/schema.ts               # SQLite schema
   test/oracle.test.ts          # 16 tests
 
-integrations/crewai/           # CrewAI integration (PyPI: nosocial-crewai)
+integrations/ai-sdk/           # Vercel AI SDK (npm: @nosocial/ai-sdk)
+  src/
+    middleware.ts              # LanguageModelV1Middleware
+    reporter.ts                # Registration + report submission
+    identity.ts                # Ed25519 keypair management
+  test/                        # 16 tests
+
+integrations/langgraph/        # LangGraph/LangChain (PyPI: nosocial-langgraph)
+  nosocial_langgraph/
+    handler.py                 # BaseCallbackHandler subclass
+    mapping.py                 # Event-to-report mapping
+    identity.py                # Ed25519 keypair management
+  tests/                       # 28 tests
+
+integrations/crewai/           # CrewAI (PyPI: nosocial-crewai)
   nosocial_crewai/
     reporter.py                # Auto-reports task completions
     identity.py                # Ed25519 keypair management
@@ -140,6 +192,12 @@ The oracle is live at `https://api.nosocial.me`.
 ```bash
 # Oracle
 cd oracle && npm install && npm test
+
+# Vercel AI SDK integration
+cd integrations/ai-sdk && npm install && npm test
+
+# LangGraph integration
+cd integrations/langgraph && pip install -e ".[dev]" && pytest
 
 # CrewAI integration
 cd integrations/crewai && pip install -e ".[dev]" && pytest
