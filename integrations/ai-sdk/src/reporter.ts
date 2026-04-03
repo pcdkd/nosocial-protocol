@@ -5,6 +5,7 @@
  * the model response. Errors are passed to the onError callback.
  */
 
+import { randomUUID } from "node:crypto";
 import { AgentIdentity } from "./identity.js";
 import type { NoSocialOptions, ReportPayload } from "./types.js";
 
@@ -15,7 +16,7 @@ export class Reporter {
   private readonly autoRegister: boolean;
   private readonly onError: (error: unknown) => void;
 
-  private identities = new Map<string, AgentIdentity>();
+  private identityPromises = new Map<string, Promise<AgentIdentity>>();
   private registered = new Set<string>();
   private agentIdentity: AgentIdentity | null = null;
   private initPromise: Promise<void> | null = null;
@@ -37,66 +38,64 @@ export class Reporter {
     return this.initPromise;
   }
 
-  private async getOrCreateIdentity(name: string): Promise<AgentIdentity> {
-    let identity = this.identities.get(name);
-    if (!identity) {
-      identity = await AgentIdentity.loadOrCreate(name, this.keysDir);
-      this.identities.set(name, identity);
+  private getOrCreateIdentity(name: string): Promise<AgentIdentity> {
+    let promise = this.identityPromises.get(name);
+    if (!promise) {
+      promise = AgentIdentity.loadOrCreate(name, this.keysDir);
+      this.identityPromises.set(name, promise);
     }
-    return identity;
+    return promise;
   }
 
   private async ensureRegistered(identity: AgentIdentity, name: string): Promise<boolean> {
     if (this.registered.has(identity.did)) return true;
     if (!this.autoRegister) return false;
 
-    try {
-      // Step 1: Request challenge
-      const challengeResp = await fetch(`${this.oracleUrl}/v1/agents/challenge`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ publicKey: identity.publicKeyStr }),
-        signal: AbortSignal.timeout(10_000),
-      });
+    // Step 1: Request challenge
+    const challengeResp = await fetch(`${this.oracleUrl}/v1/agents/challenge`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ publicKey: identity.publicKeyStr }),
+      signal: AbortSignal.timeout(10_000),
+    });
 
-      if (challengeResp.status === 409) {
-        const data = await challengeResp.json() as { error?: string };
-        const msg = (data.error || "").toLowerCase();
-        if (msg.includes("already registered") || msg.includes("already exists")) {
-          this.registered.add(identity.did);
-          return true;
-        }
-        return false;
-      }
-      if (!challengeResp.ok) return false;
-
-      const challengeData = await challengeResp.json() as {
-        challengeId: string;
-        challenge: string;
-      };
-
-      // Step 2: Sign challenge and register
-      const signature = identity.sign({ challenge: challengeData.challenge });
-      const registerResp = await fetch(`${this.oracleUrl}/v1/agents/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          challengeId: challengeData.challengeId,
-          signature,
-          publicKey: identity.publicKeyStr,
-          name,
-        }),
-        signal: AbortSignal.timeout(10_000),
-      });
-
-      if (registerResp.status === 409 || registerResp.ok) {
+    if (challengeResp.status === 409) {
+      const data = await challengeResp.json() as { error?: string };
+      const msg = (data.error || "").toLowerCase();
+      if (msg.includes("already registered") || msg.includes("already exists")) {
         this.registered.add(identity.did);
         return true;
       }
-      return false;
-    } catch {
-      return false;
+      throw new Error(`Oracle 409 during challenge for '${name}': ${data.error}`);
     }
+    if (!challengeResp.ok) {
+      throw new Error(`Oracle challenge failed for '${name}': ${challengeResp.status}`);
+    }
+
+    const challengeData = await challengeResp.json() as {
+      challengeId: string;
+      challenge: string;
+    };
+
+    // Step 2: Sign challenge and register
+    const signature = identity.sign({ challenge: challengeData.challenge });
+    const registerResp = await fetch(`${this.oracleUrl}/v1/agents/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        challengeId: challengeData.challengeId,
+        signature,
+        publicKey: identity.publicKeyStr,
+        name,
+      }),
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (registerResp.status === 409 || registerResp.ok) {
+      this.registered.add(identity.did);
+      return true;
+    }
+    throw new Error(`Oracle registration failed for '${name}': ${registerResp.status}`);
   }
 
   private async submitReport(
@@ -107,7 +106,7 @@ export class Reporter {
     context?: Record<string, unknown>,
   ): Promise<void> {
     const report: Record<string, unknown> = {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       reporter: reporter.did,
       subject: subject.did,
       timestamp: new Date().toISOString(),

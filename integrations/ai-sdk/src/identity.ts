@@ -18,8 +18,7 @@ ed.etc.sha512Sync = (...m: Uint8Array[]) => {
 };
 
 function base64urlEncode(bytes: Uint8Array): string {
-  const binary = String.fromCharCode(...bytes);
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return Buffer.from(bytes).toString("base64url");
 }
 
 function canonicalize(obj: unknown): string {
@@ -66,8 +65,10 @@ export class AgentIdentity {
     try {
       const data = await readFile(keyFile);
       return new AgentIdentity(new Uint8Array(data));
-    } catch {
-      // File doesn't exist — generate new identity
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
     }
 
     const identity = AgentIdentity.generate();
