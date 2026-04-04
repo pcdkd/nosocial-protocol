@@ -64,8 +64,16 @@ const landingHtml = `<!DOCTYPE html>
     <nav class="landing-nav">
       <a href="${BASE}/extensions/agent-profile">spec</a>
       <a href="${BASE}/schemas/agent-profile/0.1.0/schema.json">schemas</a>
+      <a href="https://api.nosocial.me">api</a>
       <a href="https://github.com/pcdkd/nosocial-protocol">github</a>
     </nav>
+    <section class="landing-install">
+      <div class="landing-install-label">install</div>
+      <pre><span class="tag">ai-sdk</span>npm install @nosocial/ai-sdk</pre>
+      <pre><span class="tag">langgraph</span>pip install nosocial-langgraph</pre>
+      <pre><span class="tag">crewai</span>pip install nosocial-crewai</pre>
+      <pre><span class="tag">mcp</span>claude mcp add nosocial -- npx -y @nosocial/mcp-server</pre>
+    </section>
     <footer class="landing-footer">v0.1.0 — MIT</footer>
   </main>
 </body>
@@ -165,14 +173,34 @@ NoSocial extends A2A Agent Cards with reputation scores, collaboration history, 
 ## API
 
 - Oracle endpoint: https://api.nosocial.me
-- \`GET /v1/agents/{did}\` — Full agent profile
-- \`GET /v1/agents/{did}/reputation\` — Reputation scores
+- \`GET /v1/agents/{did}\` — Full agent profile + reputation
+- \`GET /v1/agents/{did}/reputation\` — Detailed reputation scores
 - \`GET /v1/agents/search?capability=X&min_reputation=0.7\` — Discovery
-- \`POST /v1/reports\` — Submit interaction report
+- \`POST /v1/agents/challenge\` — Registration step 1 (request challenge)
+- \`POST /v1/agents/register\` — Registration step 2 (signed challenge)
+- \`POST /v1/reports\` — Submit signed interaction report
+- \`GET /health\` — Health check
+
+## Integrations
+
+Agents can earn and consume reputation through published SDKs. Each wraps the oracle API with identity, auto-registration, and signed report submission.
+
+- Vercel AI SDK — \`npm install @nosocial/ai-sdk\`. LanguageModelV1 middleware that auto-reports generations. Works with any provider (OpenAI, Anthropic, Google). Docs: https://github.com/pcdkd/nosocial-protocol/tree/main/integrations/ai-sdk
+- LangGraph / LangChain — \`pip install nosocial-langgraph\`. BaseCallbackHandler that reports node completions, errors, tool calls, and retriever results. Docs: https://github.com/pcdkd/nosocial-protocol/tree/main/integrations/langgraph
+- CrewAI — \`pip install nosocial-crewai\`. Task callback that auto-reports CrewAI task completions. Docs: https://github.com/pcdkd/nosocial-protocol/tree/main/integrations/crewai
+- MCP Server (Claude, Cursor) — \`claude mcp add nosocial -- npx -y @nosocial/mcp-server\`. Exposes lookup, search, and reputation tools so agents and humans can query the oracle conversationally. Docs: https://github.com/pcdkd/nosocial-protocol/tree/main/mcp-server
+
+## Core concepts
+
+- Agent Profile — A2A Agent Card extension adding reputation, history, and evolution. Carried in the A2A \`extensions\` field or at \`/.well-known/nosocial.json\`.
+- Identity — Ed25519 keypair. DID is \`did:nosocial:{SHA-256(publicKey)}\`. No blockchain.
+- Interaction Reports — Signed attestations submitted by agents after collaborating. Both parties may report.
+- Reputation domains — \`task_completion\`, \`reliability\`, \`information_quality\`, \`collaboration\`, \`communication\`. Time-decayed; reporter weight derived from the reporter's own reputation.
 
 ## Source
 
 - [GitHub](https://github.com/pcdkd/nosocial-protocol)
+- [Full specification in one fetch](${BASE}/llms-full.txt)
 `;
 
 writeFileSync(join(DOCS, 'llms.txt'), llmsTxt);

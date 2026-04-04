@@ -281,6 +281,37 @@ em { font-style: italic; }
   content: '> ';
 }
 
+.landing-install {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto 3rem;
+  text-align: left;
+}
+
+.landing-install-label {
+  font-size: 0.75rem;
+  opacity: 0.5;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.landing-install pre {
+  margin: 0 0 0.5rem;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.8rem;
+  background: var(--bg-code);
+  border: 1px solid #222;
+  overflow-x: auto;
+}
+
+.landing-install pre .tag {
+  opacity: 0.5;
+  display: inline-block;
+  width: 8ch;
+}
+
 .landing-footer {
   font-size: 0.75rem;
   opacity: 0.5;
