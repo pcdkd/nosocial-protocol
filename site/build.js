@@ -63,7 +63,7 @@ const landingHtml = `<!DOCTYPE html>
     <p class="landing-tagline">the reputation layer for autonomous agents</p>
     <nav class="landing-nav">
       <a href="${BASE}/extensions/agent-profile">spec</a>
-      <a href="${BASE}/schemas/agent-profile/0.1.0/schema.json">schemas</a>
+      <a href="${BASE}/schemas/">schemas</a>
       <a href="https://api.nosocial.me">api</a>
       <a href="https://github.com/pcdkd/nosocial-protocol">github</a>
     </nav>
@@ -170,6 +170,58 @@ for (const { src, dest } of schemas) {
   cpSync(src, dest);
 }
 
+// --- Schemas index page ---
+
+const schemasIndex = [
+  {
+    name: 'Agent Profile',
+    slug: 'agent-profile',
+    version: '0.1.0',
+    description: 'The core NoSocial Agent Profile object — identity (Ed25519 public key, DID), reputation scores across five domains, collaboration history, and capability evolution. This is what A2A Agent Cards point to via the <code>extensions</code> field or via <code>/.well-known/nosocial.json</code>.',
+    specAnchor: 'nosocial-agent-profile-schema',
+  },
+  {
+    name: 'Interaction Report',
+    slug: 'interaction-report',
+    version: '0.1.0',
+    description: 'Signed attestations submitted by agents after collaborating. Both parties in an interaction can submit a report. The oracle weights reports by the reporter\'s own reputation and decays them over time to compute the reputation scores returned by the Agent Profile schema.',
+    specAnchor: 'interaction-reports',
+  },
+];
+
+const schemasIndexHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NoSocial Schemas</title>
+  <meta name="description" content="JSON Schemas for the NoSocial protocol — Agent Profile and Interaction Report.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='2' fill='%230a0a0a'/><text x='3' y='13' font-size='12' fill='%2300ff41'>▌</text></svg>">
+  <link rel="stylesheet" href="${BASE}/style.css">
+  ${posthog}
+</head>
+<body>
+  <nav class="spec-nav">
+    <a href="${BASE}/">← nosocial</a>
+    <span>Schemas</span>
+  </nav>
+  <article class="spec-content">
+    <h1>Schemas</h1>
+    <p>JSON Schemas for the NoSocial protocol. All schemas are versioned independently and follow <a href="https://json-schema.org/draft/2020-12/schema">JSON Schema 2020-12</a>.</p>
+${schemasIndex.map(s => `    <section class="schema-entry">
+      <h2>${s.name} <span class="schema-version">v${s.version}</span></h2>
+      <p>${s.description}</p>
+      <ul class="schema-links">
+        <li><a href="${BASE}/schemas/${s.slug}/${s.version}/schema.json">schema.json</a> — raw JSON Schema</li>
+        <li><a href="${BASE}/extensions/agent-profile#${s.specAnchor}">spec section</a> — normative definition</li>
+      </ul>
+    </section>`).join('\n')}
+  </article>
+</body>
+</html>`;
+
+writeFileSync(join(DOCS, 'schemas', 'index.html'), schemasIndexHtml);
+
 // --- llms.txt (site index for LLM ingestion) ---
 
 const llmsTxt = `# NoSocial
@@ -262,5 +314,6 @@ console.log('  llms.txt');
 console.log('  llms-full.txt');
 console.log('  extensions/agent-profile/index.html');
 console.log('  extensions/agent-profile/spec.md');
+console.log('  schemas/index.html');
 console.log('  schemas/agent-profile/0.1.0/schema.json');
 console.log('  schemas/interaction-report/0.1.0/schema.json');

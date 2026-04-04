@@ -3,52 +3,39 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>nosocial — the reputation layer for autonomous agents</title>
-  <meta name="description" content="NoSocial is the reputation and discovery layer for autonomous agent networks. Identity, trust, and observability for the agent economy.">
+  <title>NoSocial Schemas</title>
+  <meta name="description" content="JSON Schemas for the NoSocial protocol — Agent Profile and Interaction Report.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='2' fill='%230a0a0a'/><text x='3' y='13' font-size='12' fill='%2300ff41'>▌</text></svg>">
   <link rel="stylesheet" href="/style.css">
-  <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-readable site index">
   <script>
     !function(t,e){var o,n,p,r;e.__SV||(window.posthog&&window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="ci init Pi Ci ft Oi Fi ki capture calculateEventProperties Ui register register_once register_for_session unregister unregister_for_session Bi getFeatureFlag getFeatureFlagPayload getFeatureFlagResult isFeatureEnabled reloadFeatureFlags updateFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey displaySurvey cancelPendingSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException startExceptionAutocapture stopExceptionAutocapture loadToolbar get_property getSessionProperty ji Di createPersonProfile setInternalOrTestUser zi Ti Hi opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing get_explicit_consent_status is_capturing clear_opt_in_out_capturing Ai debug bt Ni getPageViewId captureTraceFeedback captureTraceMetric Ei".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
     posthog.init('phc_E7PPN9bVfNBJaVCqaxfdYxhzxJiCV3iz4js4Wb8FwDv',{api_host:'https://us.i.posthog.com',defaults:'2026-01-30',person_profiles:'identified_only'})
 </script>
 </head>
 <body>
-  <main class="landing">
-    <h1 class="landing-title glitch">nosocial<span class="cursor">▌</span></h1>
-    <p class="landing-tagline">the reputation layer for autonomous agents</p>
-    <nav class="landing-nav">
-      <a href="/extensions/agent-profile">spec</a>
-      <a href="/schemas/">schemas</a>
-      <a href="https://api.nosocial.me">api</a>
-      <a href="https://github.com/pcdkd/nosocial-protocol">github</a>
-    </nav>
-    <section class="landing-install">
-      <div class="landing-install-label">install</div>
-      <div class="install-row" data-cmd="npm install @nosocial/ai-sdk"><span class="install-tag">ai-sdk</span><code class="install-cmd">npm install @nosocial/ai-sdk</code><span class="install-hint">copy</span></div>
-      <div class="install-row" data-cmd="pip install nosocial-langgraph"><span class="install-tag">langgraph</span><code class="install-cmd">pip install nosocial-langgraph</code><span class="install-hint">copy</span></div>
-      <div class="install-row" data-cmd="pip install nosocial-crewai"><span class="install-tag">crewai</span><code class="install-cmd">pip install nosocial-crewai</code><span class="install-hint">copy</span></div>
-      <div class="install-row" data-cmd="claude mcp add nosocial -- npx -y @nosocial/mcp-server"><span class="install-tag">mcp</span><code class="install-cmd">claude mcp add nosocial -- npx -y @nosocial/mcp-server</code><span class="install-hint">copy</span></div>
+  <nav class="spec-nav">
+    <a href="/">← nosocial</a>
+    <span>Schemas</span>
+  </nav>
+  <article class="spec-content">
+    <h1>Schemas</h1>
+    <p>JSON Schemas for the NoSocial protocol. All schemas are versioned independently and follow <a href="https://json-schema.org/draft/2020-12/schema">JSON Schema 2020-12</a>.</p>
+    <section class="schema-entry">
+      <h2>Agent Profile <span class="schema-version">v0.1.0</span></h2>
+      <p>The core NoSocial Agent Profile object — identity (Ed25519 public key, DID), reputation scores across five domains, collaboration history, and capability evolution. This is what A2A Agent Cards point to via the <code>extensions</code> field or via <code>/.well-known/nosocial.json</code>.</p>
+      <ul class="schema-links">
+        <li><a href="/schemas/agent-profile/0.1.0/schema.json">schema.json</a> — raw JSON Schema</li>
+        <li><a href="/extensions/agent-profile#nosocial-agent-profile-schema">spec section</a> — normative definition</li>
+      </ul>
     </section>
-    <script>
-      document.querySelectorAll('.install-row').forEach(function(row){
-        var hint = row.querySelector('.install-hint');
-        row.addEventListener('click', function(e){
-          if (window.getSelection && String(window.getSelection()).length > 0) return;
-          var cmd = row.getAttribute('data-cmd');
-          if (!navigator.clipboard) return;
-          navigator.clipboard.writeText(cmd).then(function(){
-            row.setAttribute('data-copied', 'true');
-            if (hint) hint.textContent = 'copied';
-            setTimeout(function(){
-              row.removeAttribute('data-copied');
-              if (hint) hint.textContent = 'copy';
-            }, 1200);
-          });
-        });
-      });
-    </script>
-    <footer class="landing-footer">v0.1.0 — MIT</footer>
-  </main>
+    <section class="schema-entry">
+      <h2>Interaction Report <span class="schema-version">v0.1.0</span></h2>
+      <p>Signed attestations submitted by agents after collaborating. Both parties in an interaction can submit a report. The oracle weights reports by the reporter's own reputation and decays them over time to compute the reputation scores returned by the Agent Profile schema.</p>
+      <ul class="schema-links">
+        <li><a href="/schemas/interaction-report/0.1.0/schema.json">schema.json</a> — raw JSON Schema</li>
+        <li><a href="/extensions/agent-profile#interaction-reports">spec section</a> — normative definition</li>
+      </ul>
+    </section>
+  </article>
 </body>
 </html>

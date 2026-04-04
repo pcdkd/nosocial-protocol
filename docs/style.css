@@ -403,6 +403,52 @@ em { font-style: italic; }
   opacity: 0.4;
 }
 
+/* --- Schemas index --- */
+
+.schema-entry {
+  margin: 2rem 0;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-code);
+  border: 1px solid #222;
+}
+
+.schema-entry h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.schema-version {
+  font-size: 0.7rem;
+  opacity: 0.5;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: normal;
+}
+
+.schema-entry p {
+  margin: 0 0 0.75rem;
+  opacity: 0.85;
+}
+
+.schema-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.schema-links li {
+  margin: 0.25rem 0;
+}
+
+.schema-links li::before {
+  content: '> ';
+  opacity: 0.5;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .landing-title {
