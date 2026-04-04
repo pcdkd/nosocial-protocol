@@ -26,9 +26,15 @@ if (existsSync(DOCS)) {
 // Prevent Jekyll processing on GitHub Pages
 writeFileSync(join(DOCS, '.nojekyll'), '');
 
-// --- Copy shared CSS ---
+// --- Copy shared assets ---
 
 cpSync(join(SITE, 'style.css'), join(DOCS, 'style.css'));
+cpSync(join(SITE, 'nosocial-social-header.png'), join(DOCS, 'nosocial-social-header.png'));
+
+// --- Canonical site URL (used for absolute og:image / twitter:image) ---
+
+const SITE_URL = process.env.SITE_URL || 'https://nosocial.me';
+const OG_IMAGE = `${SITE_URL}/nosocial-social-header.png`;
 
 // --- CNAME ---
 
@@ -52,6 +58,20 @@ const landingHtml = `<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>nosocial — the reputation layer for autonomous agents</title>
   <meta name="description" content="NoSocial is the reputation and discovery layer for autonomous agent networks. Identity, trust, and observability for the agent economy.">
+  <link rel="canonical" href="${SITE_URL}/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoSocial">
+  <meta property="og:title" content="NoSocial — the reputation layer for autonomous agents">
+  <meta property="og:description" content="A2A tells you what an agent claims it can do. NoSocial tells you how well it actually does it. Reputation, identity, and discovery for the agent economy.">
+  <meta property="og:url" content="${SITE_URL}/">
+  <meta property="og:image" content="${OG_IMAGE}">
+  <meta property="og:image:width" content="2994">
+  <meta property="og:image:height" content="1816">
+  <meta property="og:image:alt" content="NoSocial — the reputation layer for autonomous agents">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="NoSocial — the reputation layer for autonomous agents">
+  <meta name="twitter:description" content="A2A tells you what an agent claims it can do. NoSocial tells you how well it actually does it.">
+  <meta name="twitter:image" content="${OG_IMAGE}">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='2' fill='%230a0a0a'/><text x='3' y='13' font-size='12' fill='%2300ff41'>▌</text></svg>">
   <link rel="stylesheet" href="${BASE}/style.css">
   <link rel="alternate" type="text/plain" href="${BASE}/llms.txt" title="LLM-readable site index">
@@ -131,6 +151,20 @@ const specHtml = `<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>NoSocial Agent Profile Extension v0.1.0</title>
   <meta name="description" content="The NoSocial Agent Profile Extension adds reputation, history, and evolution metadata to A2A Agent Cards.">
+  <link rel="canonical" href="${SITE_URL}/extensions/agent-profile">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="NoSocial">
+  <meta property="og:title" content="NoSocial Agent Profile Extension v0.1.0">
+  <meta property="og:description" content="The NoSocial Agent Profile Extension adds reputation, history, and evolution metadata to A2A Agent Cards.">
+  <meta property="og:url" content="${SITE_URL}/extensions/agent-profile">
+  <meta property="og:image" content="${OG_IMAGE}">
+  <meta property="og:image:width" content="2994">
+  <meta property="og:image:height" content="1816">
+  <meta property="og:image:alt" content="NoSocial — the reputation layer for autonomous agents">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="NoSocial Agent Profile Extension v0.1.0">
+  <meta name="twitter:description" content="The NoSocial Agent Profile Extension adds reputation, history, and evolution metadata to A2A Agent Cards.">
+  <meta name="twitter:image" content="${OG_IMAGE}">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='2' fill='%230a0a0a'/><text x='3' y='13' font-size='12' fill='%2300ff41'>▌</text></svg>">
   <link rel="stylesheet" href="${BASE}/style.css">
   <link rel="alternate" type="text/markdown" href="${BASE}/extensions/agent-profile/spec.md" title="Spec (Markdown)">
@@ -197,6 +231,20 @@ const schemasIndexHtml = `<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>NoSocial Schemas</title>
   <meta name="description" content="JSON Schemas for the NoSocial protocol — Agent Profile and Interaction Report.">
+  <link rel="canonical" href="${SITE_URL}/schemas/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoSocial">
+  <meta property="og:title" content="NoSocial Schemas">
+  <meta property="og:description" content="JSON Schemas for the NoSocial protocol — Agent Profile and Interaction Report.">
+  <meta property="og:url" content="${SITE_URL}/schemas/">
+  <meta property="og:image" content="${OG_IMAGE}">
+  <meta property="og:image:width" content="2994">
+  <meta property="og:image:height" content="1816">
+  <meta property="og:image:alt" content="NoSocial — the reputation layer for autonomous agents">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="NoSocial Schemas">
+  <meta name="twitter:description" content="JSON Schemas for the NoSocial protocol — Agent Profile and Interaction Report.">
+  <meta name="twitter:image" content="${OG_IMAGE}">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='2' fill='%230a0a0a'/><text x='3' y='13' font-size='12' fill='%2300ff41'>▌</text></svg>">
   <link rel="stylesheet" href="${BASE}/style.css">
   ${posthog}
@@ -311,6 +359,7 @@ writeFileSync(join(DOCS, 'llms-full.txt'), llmsFullTxt);
 console.log('Site built → docs/');
 console.log('  index.html');
 console.log('  style.css');
+console.log('  nosocial-social-header.png');
 console.log('  llms.txt');
 console.log('  llms-full.txt');
 console.log('  extensions/agent-profile/index.html');
