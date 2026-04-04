@@ -69,26 +69,27 @@ const landingHtml = `<!DOCTYPE html>
     </nav>
     <section class="landing-install">
       <div class="landing-install-label">install</div>
-      <div class="install-row" data-cmd="npm install @nosocial/ai-sdk"><span class="install-tag">ai-sdk</span><code class="install-cmd">npm install @nosocial/ai-sdk</code><span class="install-hint">copy</span></div>
-      <div class="install-row" data-cmd="pip install nosocial-langgraph"><span class="install-tag">langgraph</span><code class="install-cmd">pip install nosocial-langgraph</code><span class="install-hint">copy</span></div>
-      <div class="install-row" data-cmd="pip install nosocial-crewai"><span class="install-tag">crewai</span><code class="install-cmd">pip install nosocial-crewai</code><span class="install-hint">copy</span></div>
-      <div class="install-row" data-cmd="claude mcp add nosocial -- npx -y @nosocial/mcp-server"><span class="install-tag">mcp</span><code class="install-cmd">claude mcp add nosocial -- npx -y @nosocial/mcp-server</code><span class="install-hint">copy</span></div>
+      ${[
+        { tag: 'ai-sdk',    cmd: 'npm install @nosocial/ai-sdk' },
+        { tag: 'langgraph', cmd: 'pip install nosocial-langgraph' },
+        { tag: 'crewai',    cmd: 'pip install nosocial-crewai' },
+        { tag: 'mcp',       cmd: 'claude mcp add nosocial -- npx -y @nosocial/mcp-server' },
+      ].map(({ tag, cmd }) => `<div class="install-row" data-cmd="${cmd}" role="button" tabindex="0" aria-label="Copy install command for ${tag}"><span class="install-tag">${tag}</span><code class="install-cmd">${cmd}</code><span class="install-icon" aria-hidden="true"><svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span></div>`).join('\n      ')}
     </section>
     <script>
       document.querySelectorAll('.install-row').forEach(function(row){
-        var hint = row.querySelector('.install-hint');
-        row.addEventListener('click', function(e){
+        function copy(){
           if (window.getSelection && String(window.getSelection()).length > 0) return;
           var cmd = row.getAttribute('data-cmd');
           if (!navigator.clipboard) return;
           navigator.clipboard.writeText(cmd).then(function(){
             row.setAttribute('data-copied', 'true');
-            if (hint) hint.textContent = 'copied';
-            setTimeout(function(){
-              row.removeAttribute('data-copied');
-              if (hint) hint.textContent = 'copy';
-            }, 1200);
+            setTimeout(function(){ row.removeAttribute('data-copied'); }, 1200);
           });
+        }
+        row.addEventListener('click', copy);
+        row.addEventListener('keydown', function(e){
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copy(); }
         });
       });
     </script>

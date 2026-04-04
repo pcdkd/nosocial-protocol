@@ -283,7 +283,7 @@ em { font-style: italic; }
 
 .landing-install {
   width: 100%;
-  max-width: 620px;
+  max-width: 680px;
   margin: 0 auto 3rem;
   text-align: left;
 }
@@ -300,61 +300,91 @@ em { font-style: italic; }
 .install-row {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin: 0 0 0.5rem;
-  padding: 0.6rem 0.9rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.8rem;
-  background: var(--bg-code);
-  border: 1px solid #222;
+  gap: 1.75rem;
+  margin: 0 0 0.6rem;
+  padding: 0.85rem 1.1rem;
+  font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 0.82rem;
+  background: #0f1410;
+  border: 1px solid #1e2a1e;
+  border-radius: 4px;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
   overflow-x: auto;
 }
 
 .install-row:hover {
-  border-color: #2a3a2a;
+  border-color: #2e4a2e;
+  background: #121a12;
 }
 
 .install-tag {
   flex: 0 0 auto;
   width: 10ch;
-  opacity: 0.5;
+  opacity: 0.55;
+  font-size: inherit;
   user-select: none;
   -webkit-user-select: none;
 }
 
-.install-cmd {
+/* Override global `code` rule so the command is flush with the row */
+.install-row .install-cmd {
   flex: 1 1 auto;
   background: transparent;
+  border: none;
+  border-radius: 0;
   padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
   white-space: nowrap;
   user-select: text;
   -webkit-user-select: text;
 }
 
-.install-hint {
+.install-icon {
   flex: 0 0 auto;
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  opacity: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 0.25rem;
+  opacity: 0.35;
   transition: opacity 0.15s ease;
   user-select: none;
   -webkit-user-select: none;
   color: var(--green);
 }
 
-.install-row:hover .install-hint {
-  opacity: 0.5;
+.install-row:hover .install-icon {
+  opacity: 0.75;
 }
 
-.install-row[data-copied="true"] .install-hint {
-  opacity: 1;
+.install-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.install-icon .icon-check {
+  display: none;
 }
 
 .install-row[data-copied="true"] {
   border-color: var(--green);
+}
+
+.install-row[data-copied="true"] .install-icon {
+  opacity: 1;
+}
+
+.install-row[data-copied="true"] .install-icon .icon-copy {
+  display: none;
+}
+
+.install-row[data-copied="true"] .install-icon .icon-check {
+  display: block;
 }
 
 .landing-footer {
