@@ -69,11 +69,29 @@ const landingHtml = `<!DOCTYPE html>
     </nav>
     <section class="landing-install">
       <div class="landing-install-label">install</div>
-      <pre><span class="tag">ai-sdk</span>npm install @nosocial/ai-sdk</pre>
-      <pre><span class="tag">langgraph</span>pip install nosocial-langgraph</pre>
-      <pre><span class="tag">crewai</span>pip install nosocial-crewai</pre>
-      <pre><span class="tag">mcp</span>claude mcp add nosocial -- npx -y @nosocial/mcp-server</pre>
+      <div class="install-row" data-cmd="npm install @nosocial/ai-sdk"><span class="install-tag">ai-sdk</span><code class="install-cmd">npm install @nosocial/ai-sdk</code><span class="install-hint">copy</span></div>
+      <div class="install-row" data-cmd="pip install nosocial-langgraph"><span class="install-tag">langgraph</span><code class="install-cmd">pip install nosocial-langgraph</code><span class="install-hint">copy</span></div>
+      <div class="install-row" data-cmd="pip install nosocial-crewai"><span class="install-tag">crewai</span><code class="install-cmd">pip install nosocial-crewai</code><span class="install-hint">copy</span></div>
+      <div class="install-row" data-cmd="claude mcp add nosocial -- npx -y @nosocial/mcp-server"><span class="install-tag">mcp</span><code class="install-cmd">claude mcp add nosocial -- npx -y @nosocial/mcp-server</code><span class="install-hint">copy</span></div>
     </section>
+    <script>
+      document.querySelectorAll('.install-row').forEach(function(row){
+        var hint = row.querySelector('.install-hint');
+        row.addEventListener('click', function(e){
+          if (window.getSelection && String(window.getSelection()).length > 0) return;
+          var cmd = row.getAttribute('data-cmd');
+          if (!navigator.clipboard) return;
+          navigator.clipboard.writeText(cmd).then(function(){
+            row.setAttribute('data-copied', 'true');
+            if (hint) hint.textContent = 'copied';
+            setTimeout(function(){
+              row.removeAttribute('data-copied');
+              if (hint) hint.textContent = 'copy';
+            }, 1200);
+          });
+        });
+      });
+    </script>
     <footer class="landing-footer">v0.1.0 — MIT</footer>
   </main>
 </body>

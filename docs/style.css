@@ -283,7 +283,7 @@ em { font-style: italic; }
 
 .landing-install {
   width: 100%;
-  max-width: 560px;
+  max-width: 620px;
   margin: 0 auto 3rem;
   text-align: left;
 }
@@ -297,19 +297,64 @@ em { font-style: italic; }
   text-align: center;
 }
 
-.landing-install pre {
+.install-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   margin: 0 0 0.5rem;
   padding: 0.6rem 0.9rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.8rem;
   background: var(--bg-code);
   border: 1px solid #222;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
   overflow-x: auto;
 }
 
-.landing-install pre .tag {
+.install-row:hover {
+  border-color: #2a3a2a;
+}
+
+.install-tag {
+  flex: 0 0 auto;
+  width: 10ch;
   opacity: 0.5;
-  display: inline-block;
-  width: 8ch;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.install-cmd {
+  flex: 1 1 auto;
+  background: transparent;
+  padding: 0;
+  white-space: nowrap;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.install-hint {
+  flex: 0 0 auto;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  color: var(--green);
+}
+
+.install-row:hover .install-hint {
+  opacity: 0.5;
+}
+
+.install-row[data-copied="true"] .install-hint {
+  opacity: 1;
+}
+
+.install-row[data-copied="true"] {
+  border-color: var(--green);
 }
 
 .landing-footer {
